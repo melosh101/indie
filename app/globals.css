@@ -181,3 +181,11 @@
 		@apply bg-background text-foreground;
 	}
 }
+
+
+input[aria-invalid="true"], textarea[aria-invalid="true"] {
+	@apply border-red-500/50!;
+}
+input[aria-invalid="true"]:focus-visible, textarea[aria-invalid="true"]:focus-visible {
+	@apply ring-red-500! border-none;
+}
