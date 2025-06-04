@@ -7,7 +7,18 @@
 	},
 	"files": {
 		"ignoreUnknown": false,
-		"ignore": []
+		"ignore": [
+			"**/node_modules/**",
+			"**/dist/**",
+			"**/build/**",
+			"**/coverage/**",
+			"**/.next/**",
+			"**/.nuxt/**",
+			"**/.cache/**",
+			"**/.vercel/**",
+			"**/.output/**",
+			"**/_generated/**"
+		]
 	},
 	"formatter": {
 		"enabled": true,

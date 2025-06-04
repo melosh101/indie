@@ -33,9 +33,8 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { useForm, type SubmitHandler } from "react-hook-form";
+import { type SubmitHandler, useForm } from "react-hook-form";
 import { Area, AreaChart, Line, LineChart, XAxis, YAxis } from "recharts";
-
 
 const chartConfig = {
 	visitors: {
@@ -72,8 +71,6 @@ const chartConfig = {
 	},
 } satisfies ChartConfig;
 
-
-
 export default function Component() {
 	const trafficData = useQuery(api.traffic.get);
 	const visibilityData = useQuery(api.visibility.get);
@@ -88,32 +85,41 @@ export default function Component() {
 		website: string;
 		message: string;
 	};
-	const {register, handleSubmit, watch, formState: {errors}} = useForm<contactFormData>()
+	const {
+		register,
+		handleSubmit,
+		watch,
+		formState: { errors },
+	} = useForm<contactFormData>();
 	const handleContactSubmit: SubmitHandler<contactFormData> = (data) => {
-		const firstName = data["first-name"]
-		const lastName = data["last-name"]
-		const email = data.email
-		const website = data.website
-		const message = data.message
+		const firstName = data["first-name"];
+		const lastName = data["last-name"];
+		const email = data.email;
+		const website = data.website;
+		const message = data.message;
 
 		if (!firstName || !lastName || !email || !website || !message) {
 			throw new Error("All fields are required");
 		}
-	
+
 		return contactMutation({
 			firstName,
 			lastName,
 			email,
 			website,
 			message,
-		}).then(() => {
-			setFormSuccess(true);
-		}).catch((error) => {
-			console.error("Error submitting contact form:", error);
-			setFormSuccess(false);
-			throw new Error("Failed to submit contact form. Please try again later.");
-		});
-	}
+		})
+			.then(() => {
+				setFormSuccess(true);
+			})
+			.catch((error) => {
+				console.error("Error submitting contact form:", error);
+				setFormSuccess(false);
+				throw new Error(
+					"Failed to submit contact form. Please try again later.",
+				);
+			});
+	};
 	return (
 		<div className="flex flex-col min-h-screen">
 			{/* Header */}
@@ -666,127 +672,156 @@ export default function Component() {
 									</CardDescription>
 								</CardHeader>
 								<CardContent className="space-y-4 h-full">
-									{formSuccess ? 
-									<div className="flex flex-col items-center justify-center space-y-4 my-auto h-full">
-										<Image className="" height={48} width={38} src={"/checkmark.svg"} alt="success"/>
-										<p className="text-green-600 font-medium">
-											Tak for din besked! Vi kontakter dig snart.
-										</p>
-									</div> :									
-									<form onSubmit={handleSubmit(handleContactSubmit)} className="space-y-4">
-										<div className="grid gap-4 sm:grid-cols-2">
+									{formSuccess ? (
+										<div className="flex flex-col items-center justify-center space-y-4 my-auto h-full">
+											<Image
+												className=""
+												height={48}
+												width={38}
+												src={"/checkmark.svg"}
+												alt="success"
+											/>
+											<p className="text-green-600 font-medium">
+												Tak for din besked! Vi kontakter dig snart.
+											</p>
+										</div>
+									) : (
+										<form
+											onSubmit={handleSubmit(handleContactSubmit)}
+											className="space-y-4"
+										>
+											<div className="grid gap-4 sm:grid-cols-2">
+												<div className="space-y-2">
+													<label
+														htmlFor="first-name"
+														className="text-sm font-medium"
+													>
+														Fornavn
+													</label>
+													<Input
+														{...register("first-name", { required: true })}
+														id="first-name"
+														placeholder="Indtast dit fornavn"
+														aria-invalid={
+															errors["first-name"] ? "true" : "false"
+														}
+													/>
+													{errors.website?.type === "required" && (
+														<p className="text-red-600 text-sm mt-1">
+															Fornavn er påkrævet
+														</p>
+													)}
+												</div>
+												<div className="space-y-2">
+													<label
+														htmlFor="last-name"
+														className="text-sm font-medium"
+													>
+														Efternavn
+													</label>
+													<Input
+														{...register("last-name", { required: true })}
+														id="last-name"
+														placeholder="Indtast dit efternavn"
+														aria-invalid={
+															errors["last-name"] ? "true" : "false"
+														}
+													/>
+													{errors.website?.type === "required" && (
+														<p className="text-red-600 text-sm mt-1">
+															Efternavn er påkrævet
+														</p>
+													)}
+												</div>
+											</div>
 											<div className="space-y-2">
-												<label
-													htmlFor="first-name"
-													className="text-sm font-medium"
-												>
-													Fornavn
+												<label htmlFor="email" className="text-sm font-medium">
+													E-mail
 												</label>
 												<Input
-													{...register("first-name", { required: true })}
-													id="first-name"
-													placeholder="Indtast dit fornavn"
-												aria-invalid={errors["first-name"]? "true" : "false"}
-
+													{...register("email", {
+														required: true,
+														pattern: /^[\w\-\.]+@([\w-]+\.)+[\w-]{2,}$/i,
+													})}
+													id="email"
+													placeholder="Indtast din e-mail"
+													aria-invalid={errors.email ? "true" : "false"}
 												/>
-											{errors.website?.type === "required" && (
-												<p className="text-red-600 text-sm mt-1">
-													Fornavn er påkrævet
-												</p>
-											)}
+												{errors.email?.type === "required" && (
+													<p className="text-red-600 text-sm mt-1">
+														E-mail er påkrævet
+													</p>
+												)}
+												{errors.email?.type === "pattern" && (
+													<p className="text-red-600 text-sm mt-1">
+														Ugyldig e-mail format
+													</p>
+												)}
 											</div>
 											<div className="space-y-2">
 												<label
-													htmlFor="last-name"
+													htmlFor="website"
 													className="text-sm font-medium"
 												>
-													Efternavn
+													Hjemmeside URL
 												</label>
 												<Input
-													{...register("last-name", { required: true })}
-													id="last-name"
-													placeholder="Indtast dit efternavn"
-												aria-invalid={errors["last-name"]? "true" : "false"}
-
+													{...register("website", {
+														required: true,
+														pattern:
+															/^(https?:\/\/)?([\w-]+(\.[\w-]+)+)(\/[\w- ./?%&=]*)?$/i,
+													})}
+													id="website"
+													placeholder="https://yourwebsite.com"
+													aria-invalid={errors.website ? "true" : "false"}
 												/>
-											{errors.website?.type === "required" && (
-												<p className="text-red-600 text-sm mt-1">
-													Efternavn er påkrævet
-												</p>
-											)}
+												{errors.website?.type === "required" && (
+													<p className="text-red-600 text-sm mt-1">
+														Hjemmeside URL er påkrævet
+													</p>
+												)}
+												{errors.website?.type === "pattern" && (
+													<p className="text-red-600 text-sm mt-1">
+														Ugyldig hjemmeside URL format
+													</p>
+												)}
 											</div>
-										</div>
-										<div className="space-y-2">
-											<label htmlFor="email" className="text-sm font-medium">
-												E-mail
-											</label>
-											<Input
-												{...register("email", { required: true, pattern: /^[\w\-\.]+@([\w-]+\.)+[\w-]{2,}$/i })}
-												id="email"
-												placeholder="Indtast din e-mail"
-												aria-invalid={errors.email? "true" : "false"}
-											/>
-											{errors.email?.type === "required" && (
-												<p className="text-red-600 text-sm mt-1">
-													E-mail er påkrævet
-												</p>
-											)}
-											{errors.email?.type === "pattern" && (
-												<p className="text-red-600 text-sm mt-1">
-													Ugyldig e-mail format
-												</p>
-											)}
-
-										</div>
-										<div className="space-y-2">
-											<label htmlFor="website" className="text-sm font-medium">
-												Hjemmeside URL
-											</label>
-											<Input
-												{...register("website", { required: true, pattern: /^(https?:\/\/)?([\w-]+(\.[\w-]+)+)(\/[\w- ./?%&=]*)?$/i })}
-												id="website"
-												placeholder="https://yourwebsite.com"
-												aria-invalid={errors.website? "true" : "false"}
-
-											/>
-											{errors.website?.type === "required" && (
-												<p className="text-red-600 text-sm mt-1">
-													Hjemmeside URL er påkrævet
-												</p>
-											)}
-											{errors.website?.type === "pattern" && (
-												<p className="text-red-600 text-sm mt-1">
-													Ugyldig hjemmeside URL format
-												</p>
-											)}
-										</div>
-										<div className="space-y-2">
-											<label htmlFor="message" className="text-sm font-medium">
-												Besked
-											</label>
-											<Textarea
-												{...register("message", { required: true, minLength: 20 })}
-												id="message"
-												placeholder="Fortæl os om dine SEO-mål..."
-												className="min-h-[100px] resize-none"
-												aria-invalid={errors.message? "true" : "false"}
-
-											/>
-											{errors.website?.type === "required" && (
-												<p className="text-red-600 text-sm mt-1">
-													E-mail er påkrævet
-												</p>
-											)}
-											{errors.website?.type === "minLength" && (
-												<p className="text-red-600 text-sm mt-1">
-													Beskeden skal være mindst 20 tegn
-												</p>
-											)}
-										</div>
-										<Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
-											Få gratis SEO-audit
-										</Button>
-									</form>}
+											<div className="space-y-2">
+												<label
+													htmlFor="message"
+													className="text-sm font-medium"
+												>
+													Besked
+												</label>
+												<Textarea
+													{...register("message", {
+														required: true,
+														minLength: 20,
+													})}
+													id="message"
+													placeholder="Fortæl os om dine SEO-mål..."
+													className="min-h-[100px] resize-none"
+													aria-invalid={errors.message ? "true" : "false"}
+												/>
+												{errors.website?.type === "required" && (
+													<p className="text-red-600 text-sm mt-1">
+														E-mail er påkrævet
+													</p>
+												)}
+												{errors.website?.type === "minLength" && (
+													<p className="text-red-600 text-sm mt-1">
+														Beskeden skal være mindst 20 tegn
+													</p>
+												)}
+											</div>
+											<Button
+												type="submit"
+												className="w-full bg-blue-600 hover:bg-blue-700"
+											>
+												Få gratis SEO-audit
+											</Button>
+										</form>
+									)}
 								</CardContent>
 							</Card>
 							<div className="space-y-6">
