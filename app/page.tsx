@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/chart";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { api } from "@/convex/_generated/api";
+import { useMutation, useQuery } from "convex/react";
 import {
 	ArrowRight,
 	CheckCircle,
@@ -30,34 +32,10 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
+import { useForm, type SubmitHandler } from "react-hook-form";
 import { Area, AreaChart, Line, LineChart, XAxis, YAxis } from "recharts";
 
-const trafficData = [
-	{ month: "Jan", visitors: 12000, organic: 8000 },
-	{ month: "Feb", visitors: 15000, organic: 11000 },
-	{ month: "Mar", visitors: 18000, organic: 14000 },
-	{ month: "Apr", visitors: 22000, organic: 17000 },
-	{ month: "May", visitors: 28000, organic: 22000 },
-	{ month: "Jun", visitors: 35000, organic: 28000 },
-];
-
-const visibilityData = [
-	{ month: "Jan", client: 28, competitor1: 42, competitor2: 35 },
-	{ month: "Feb", client: 35, competitor1: 40, competitor2: 32 },
-	{ month: "Mar", client: 42, competitor1: 38, competitor2: 30 },
-	{ month: "Apr", client: 48, competitor1: 36, competitor2: 28 },
-	{ month: "May", client: 53, competitor1: 35, competitor2: 27 },
-	{ month: "Jun", client: 60, competitor1: 33, competitor2: 25 },
-];
-
-const conversionData = [
-	{ month: "Jan", rate: 2.1 },
-	{ month: "Feb", rate: 2.8 },
-	{ month: "Mar", rate: 3.2 },
-	{ month: "Apr", rate: 3.9 },
-	{ month: "May", rate: 4.5 },
-	{ month: "Jun", rate: 5.2 },
-];
 
 const chartConfig = {
 	visitors: {
@@ -94,7 +72,48 @@ const chartConfig = {
 	},
 } satisfies ChartConfig;
 
+
+
 export default function Component() {
+	const trafficData = useQuery(api.traffic.get);
+	const visibilityData = useQuery(api.visibility.get);
+	const conversionData = useQuery(api.conversion.get);
+	const contactMutation = useMutation(api.contact.submit);
+	const [formSuccess, setFormSuccess] = useState(false);
+
+	type contactFormData = {
+		"first-name": string;
+		"last-name": string;
+		email: string;
+		website: string;
+		message: string;
+	};
+	const {register, handleSubmit, watch, formState: {errors}} = useForm<contactFormData>()
+	const handleContactSubmit: SubmitHandler<contactFormData> = (data) => {
+		const firstName = data["first-name"]
+		const lastName = data["last-name"]
+		const email = data.email
+		const website = data.website
+		const message = data.message
+
+		if (!firstName || !lastName || !email || !website || !message) {
+			throw new Error("All fields are required");
+		}
+	
+		return contactMutation({
+			firstName,
+			lastName,
+			email,
+			website,
+			message,
+		}).then(() => {
+			setFormSuccess(true);
+		}).catch((error) => {
+			console.error("Error submitting contact form:", error);
+			setFormSuccess(false);
+			throw new Error("Failed to submit contact form. Please try again later.");
+		});
+	}
 	return (
 		<div className="flex flex-col min-h-screen">
 			{/* Header */}
@@ -638,7 +657,7 @@ export default function Component() {
 							</div>
 						</div>
 						<div className="mx-auto grid max-w-5xl gap-6 py-12 lg:grid-cols-2 lg:gap-12">
-							<Card>
+							<Card className="flex flex-col h-full">
 								<CardHeader>
 									<CardTitle>Send os en besked</CardTitle>
 									<CardDescription>
@@ -646,62 +665,128 @@ export default function Component() {
 										inden for 24 timer.
 									</CardDescription>
 								</CardHeader>
-								<CardContent className="space-y-4">
-									<div className="grid gap-4 sm:grid-cols-2">
-										<div className="space-y-2">
-											<label
-												htmlFor="first-name"
-												className="text-sm font-medium"
-											>
-												Fornavn
-											</label>
-											<Input
-												id="first-name"
-												placeholder="Indtast dit fornavn"
-											/>
+								<CardContent className="space-y-4 h-full">
+									{formSuccess ? 
+									<div className="flex flex-col items-center justify-center space-y-4 my-auto h-full">
+										<Image className="" height={48} width={38} src={"/checkmark.svg"} alt="success"/>
+										<p className="text-green-600 font-medium">
+											Tak for din besked! Vi kontakter dig snart.
+										</p>
+									</div> :									
+									<form onSubmit={handleSubmit(handleContactSubmit)} className="space-y-4">
+										<div className="grid gap-4 sm:grid-cols-2">
+											<div className="space-y-2">
+												<label
+													htmlFor="first-name"
+													className="text-sm font-medium"
+												>
+													Fornavn
+												</label>
+												<Input
+													{...register("first-name", { required: true })}
+													id="first-name"
+													placeholder="Indtast dit fornavn"
+												aria-invalid={errors["first-name"]? "true" : "false"}
+
+												/>
+											{errors.website?.type === "required" && (
+												<p className="text-red-600 text-sm mt-1">
+													Fornavn er påkrævet
+												</p>
+											)}
+											</div>
+											<div className="space-y-2">
+												<label
+													htmlFor="last-name"
+													className="text-sm font-medium"
+												>
+													Efternavn
+												</label>
+												<Input
+													{...register("last-name", { required: true })}
+													id="last-name"
+													placeholder="Indtast dit efternavn"
+												aria-invalid={errors["last-name"]? "true" : "false"}
+
+												/>
+											{errors.website?.type === "required" && (
+												<p className="text-red-600 text-sm mt-1">
+													Efternavn er påkrævet
+												</p>
+											)}
+											</div>
 										</div>
 										<div className="space-y-2">
-											<label
-												htmlFor="last-name"
-												className="text-sm font-medium"
-											>
-												Efternavn
+											<label htmlFor="email" className="text-sm font-medium">
+												E-mail
 											</label>
 											<Input
-												id="last-name"
-												placeholder="Indtast dit efternavn"
+												{...register("email", { required: true, pattern: /^[\w\-\.]+@([\w-]+\.)+[\w-]{2,}$/i })}
+												id="email"
+												placeholder="Indtast din e-mail"
+												aria-invalid={errors.email? "true" : "false"}
 											/>
+											{errors.email?.type === "required" && (
+												<p className="text-red-600 text-sm mt-1">
+													E-mail er påkrævet
+												</p>
+											)}
+											{errors.email?.type === "pattern" && (
+												<p className="text-red-600 text-sm mt-1">
+													Ugyldig e-mail format
+												</p>
+											)}
+
 										</div>
-									</div>
-									<div className="space-y-2">
-										<label htmlFor="email" className="text-sm font-medium">
-											E-mail
-										</label>
-										<Input
-											id="email"
-											type="email"
-											placeholder="Indtast din e-mail"
-										/>
-									</div>
-									<div className="space-y-2">
-										<label htmlFor="website" className="text-sm font-medium">
-											Hjemmeside URL
-										</label>
-										<Input id="website" placeholder="https://yourwebsite.com" />
-									</div>
-									<div className="space-y-2">
-										<label htmlFor="message" className="text-sm font-medium">
-											Besked
-										</label>
-										<Textarea
-											id="message"
-											placeholder="Fortæl os om dine SEO-mål..."
-											className="min-h-[100px]"
-										/>
-									</div>
-									<Button className="w-full bg-blue-600 hover:bg-blue-700">
-										Få gratis SEO-audit
-									</Button>
+										<div className="space-y-2">
+											<label htmlFor="website" className="text-sm font-medium">
+												Hjemmeside URL
+											</label>
+											<Input
+												{...register("website", { required: true, pattern: /^(https?:\/\/)?([\w-]+(\.[\w-]+)+)(\/[\w- ./?%&=]*)?$/i })}
+												id="website"
+												placeholder="https://yourwebsite.com"
+												aria-invalid={errors.website? "true" : "false"}
+
+											/>
+											{errors.website?.type === "required" && (
+												<p className="text-red-600 text-sm mt-1">
+													Hjemmeside URL er påkrævet
+												</p>
+											)}
+											{errors.website?.type === "pattern" && (
+												<p className="text-red-600 text-sm mt-1">
+													Ugyldig hjemmeside URL format
+												</p>
+											)}
+										</div>
+										<div className="space-y-2">
+											<label htmlFor="message" className="text-sm font-medium">
+												Besked
+											</label>
+											<Textarea
+												{...register("message", { required: true, minLength: 20 })}
+												id="message"
+												placeholder="Fortæl os om dine SEO-mål..."
+												className="min-h-[100px] resize-none"
+												aria-invalid={errors.message? "true" : "false"}
+
+											/>
+											{errors.website?.type === "required" && (
+												<p className="text-red-600 text-sm mt-1">
+													E-mail er påkrævet
+												</p>
+											)}
+											{errors.website?.type === "minLength" && (
+												<p className="text-red-600 text-sm mt-1">
+													Beskeden skal være mindst 20 tegn
+												</p>
+											)}
+										</div>
+										<Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
+											Få gratis SEO-audit
+										</Button>
+									</form>}
 								</CardContent>
 							</Card>
 							<div className="space-y-6">

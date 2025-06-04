@@ -1,0 +1,6 @@
+{ "month": "Jan", "visitors": 12000, "organic": 8000 }
+{ "month": "Feb", "visitors": 15000, "organic": 11000 }
+{ "month": "Mar", "visitors": 18000, "organic": 14000 }
+{ "month": "Apr", "visitors": 22000, "organic": 17000 }
+{ "month": "May", "visitors": 28000, "organic": 22000 }
+{ "month": "Jun", "visitors": 35000, "organic": 28000 }
