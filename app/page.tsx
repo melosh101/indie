@@ -117,7 +117,7 @@ export default function Component() {
 	return (
 		<div className="flex flex-col min-h-screen">
 			{/* Header */}
-			<header className="px-4 lg:px-6 h-16 flex items-center border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 sticky top-0 z-50">
+			<header className="px-4 lg:px-6 h-16 flex items-center border-b bg-white/95 backdrop-blur-sm supports-backdrop-filter:bg-white/60 sticky top-0 z-50">
 				<Link href="/" className="flex items-center justify-center">
 					<Search className="h-6 w-6 text-blue-600" />
 					<span className="ml-2 text-xl font-bold text-gray-900">
@@ -154,7 +154,7 @@ export default function Component() {
 
 			<main className="flex-1">
 				{/* Hero Section */}
-				<section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-br from-blue-50 to-indigo-100">
+				<section className="w-full py-12 md:py-24 lg:py-32 bg-linear-to-br from-blue-50 to-indigo-100">
 					<div className="container px-4 md:px-6">
 						<div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
 							<div className="flex flex-col justify-center space-y-4">
